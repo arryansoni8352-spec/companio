@@ -3,6 +3,7 @@ services:
     name: companio-backend
     runtime: node
     plan: free
+    rootDir: backend
     buildCommand: npm install && npm run build && npx prisma generate
     startCommand: npx prisma db push && npm run start:prod
     envVars:
