@@ -1,0 +1,17 @@
+# Build and dependencies
+node_modules
+.next
+dist
+build
+.vercel
+
+# Local environment and data
+.env
+*.db
+*.db-journal
+git-portable/
+
+# System files
+*.log
+.DS_Store
+Thumbs.db
