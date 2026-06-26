@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+// Derive WebSocket base URL from API_URL (strip /api suffix)
+export function getWsUrl(namespace: string): string {
+  const base = API_URL.replace(/\/api\/?$/, '');
+  return `${base}${namespace}`;
+}
 
 class ApiClient {
   private token: string | null = null;

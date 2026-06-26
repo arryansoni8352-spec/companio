@@ -3,15 +3,16 @@ services:
     name: companio-backend
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build && npx prisma generate
+    rootDir: backend
+    buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npx prisma db push && npm run start:prod
     envVars:
       - key: DATABASE_URL
         value: file:./dev.db
       - key: JWT_SECRET
-        value: companio-jwt-secret-change-in-production-2024
+        generateValue: true
       - key: JWT_REFRESH_SECRET
-        value: companio-refresh-secret-change-in-production-2024
+        generateValue: true
       - key: JWT_EXPIRY
         value: 15m
       - key: JWT_REFRESH_EXPIRY
@@ -22,3 +23,5 @@ services:
         value: https://frontend-lake-nine-29.vercel.app
       - key: NODE_ENV
         value: production
+      - key: UPLOAD_DIR
+        value: ./uploads

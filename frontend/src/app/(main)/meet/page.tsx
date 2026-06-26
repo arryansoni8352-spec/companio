@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import api from '@/lib/api';
+import api, { getWsUrl } from '@/lib/api';
 
 const COUNTRIES = [
   'Global',
@@ -54,7 +54,7 @@ export default function RandomMeetPage() {
     const token = localStorage.getItem('companio_token');
     if (!token) return;
 
-    socketRef.current = io('http://localhost:3001/webrtc', {
+    socketRef.current = io(getWsUrl('/webrtc'), {
       auth: { token }
     });
 
