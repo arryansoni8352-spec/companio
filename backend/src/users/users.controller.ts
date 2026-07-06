@@ -9,6 +9,7 @@ class UpdateProfileDto {
   @IsOptional() @IsString() bio?: string;
   @IsOptional() @IsString() website?: string;
   @IsOptional() @IsString() location?: string;
+  @IsOptional() @IsString() themeColor?: string;
   @IsOptional() @IsArray() interests?: string[];
 }
 

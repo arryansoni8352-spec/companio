@@ -55,6 +55,7 @@ export class UsersService {
     bio?: string;
     website?: string;
     location?: string;
+    themeColor?: string;
     interests?: string[];
   }) {
     return this.prisma.profile.update({
@@ -64,6 +65,7 @@ export class UsersService {
         bio: data.bio,
         website: data.website,
         location: data.location,
+        themeColor: data.themeColor,
         interests: data.interests ? JSON.stringify(data.interests) : undefined,
       },
     });

@@ -9,7 +9,7 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('posts');
   const [editing, setEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ displayName: '', bio: '', website: '', location: '' });
+  const [editForm, setEditForm] = useState({ displayName: '', bio: '', website: '', location: '', themeColor: '#6E56CF' });
 
   useEffect(() => { loadProfile(); }, []);
 
@@ -22,6 +22,7 @@ export default function ProfilePage() {
         bio: me.profile?.bio || '',
         website: me.profile?.website || '',
         location: me.profile?.location || '',
+        themeColor: me.profile?.themeColor || '#6E56CF',
       });
       const userPosts = await api.getUserPosts(me.username);
       setPosts(userPosts);
@@ -43,12 +44,12 @@ export default function ProfilePage() {
       {/* Profile Header */}
       <div className="profile-header">
         <div className="profile-avatar">
-          <div style={{ width: 128, height: 128, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 48 }}>
+          <div style={{ width: 128, height: 128, borderRadius: '50%', background: user.profile?.themeColor ? `linear-gradient(135deg, ${user.profile.themeColor}, #333)` : 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: 48, boxShadow: user.profile?.themeColor ? `0 4px 20px ${user.profile.themeColor}40` : 'none' }}>
             {user.profile?.displayName?.[0] || user.username[0].toUpperCase()}
           </div>
         </div>
         <div className="profile-info">
-          <div className="profile-username">
+          <div className="profile-username" style={{ color: user.profile?.themeColor || 'inherit' }}>
             {user.username}
             {user.verified && <span className="badge badge-verified" style={{ fontSize: 11 }}>✓ Verified</span>}
           </div>
@@ -85,7 +86,11 @@ export default function ProfilePage() {
               <input className="input" placeholder="Display name" value={editForm.displayName} onChange={(e) => setEditForm({ ...editForm, displayName: e.target.value })} style={{ marginBottom: 'var(--space-2)' }} />
               <textarea className="input" placeholder="Bio" rows={3} value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} style={{ marginBottom: 'var(--space-2)' }} />
               <input className="input" placeholder="Website" value={editForm.website} onChange={(e) => setEditForm({ ...editForm, website: e.target.value })} style={{ marginBottom: 'var(--space-2)' }} />
-              <input className="input" placeholder="Location" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} style={{ marginBottom: 'var(--space-3)' }} />
+              <input className="input" placeholder="Location" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} style={{ marginBottom: 'var(--space-2)' }} />
+              <div style={{ marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <label style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600 }}>Profile Color:</label>
+                <input type="color" value={editForm.themeColor} onChange={(e) => setEditForm({ ...editForm, themeColor: e.target.value })} style={{ width: '40px', height: '40px', padding: 0, border: 'none', borderRadius: '50%', cursor: 'pointer', overflow: 'hidden' }} />
+              </div>
               <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
                 <button className="btn btn-primary btn-sm" onClick={handleSave} style={{ flex: 1 }}>Save</button>
                 <button className="btn btn-secondary btn-sm" onClick={() => setEditing(false)} style={{ flex: 1 }}>Cancel</button>

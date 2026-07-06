@@ -181,8 +181,8 @@ export class AICompanionService implements OnModuleInit {
     // 3. Fallback response synthesizer
     if (!generatedReply) {
       const lowercase = content.toLowerCase();
-      const name = conv.aiCompanion.name;
-      const category = conv.aiCompanion.category;
+      const name = conv.aiCompanion?.name || 'AI Friend';
+      const category = conv.aiCompanion?.category || 'Friend';
       
       if (lowercase.includes('hello') || lowercase.includes('hi') || lowercase.includes('hey')) {
         if (category === 'Life Coach') {

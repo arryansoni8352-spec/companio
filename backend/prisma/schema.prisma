@@ -86,6 +86,7 @@ model Profile {
   coverImage  String?
   website     String?
   location    String?
+  themeColor  String?
   interests   String?  // JSON array stored as string
   dateOfBirth DateTime?
   gender      String?
