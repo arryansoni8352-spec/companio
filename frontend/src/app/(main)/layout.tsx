@@ -95,6 +95,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { path: '/meet', label: 'Live Match', icon: Icons.meet },
     { path: '/ai', label: 'AI Friends', icon: Icons.ai },
     { path: '/companio', label: 'Companions', icon: Icons.companio },
+    { path: '/communities', label: 'Communities', icon: Icons.search },
     { path: '/messages', label: 'Messages', icon: Icons.messages },
     { path: '/profile', label: 'Profile', icon: Icons.profile },
   ];
