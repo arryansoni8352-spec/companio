@@ -6,7 +6,10 @@ import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    const adapter = new PrismaBetterSqlite3({ url: 'dev.db' });
+    const dbUrl = process.env.DATABASE_URL || 'dev.db';
+    // Strip 'file:' prefix if present — the adapter expects a plain path
+    const dbPath = dbUrl.replace(/^file:\.?\/?/, '');
+    const adapter = new PrismaBetterSqlite3({ url: dbPath });
     super({ adapter });
   }
 

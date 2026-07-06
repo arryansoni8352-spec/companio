@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+
+// Derive WebSocket base URL from API_URL (strip /api suffix)
+export function getWsUrl(namespace: string): string {
+  const base = API_URL.replace(/\/api\/?$/, '');
+  return `${base}${namespace}`;
+}
 
 class ApiClient {
   private token: string | null = null;
@@ -219,18 +225,18 @@ class ApiClient {
   async getAdminUsers(params: any = {}) { return this.request<any>(`/admin/users?${new URLSearchParams(params)}`); }
   async getAdminReports(params: any = {}) { return this.request<any>(`/admin/reports?${new URLSearchParams(params)}`); }
 
-  // Storage
-  async uploadFile(file: File, folder: string) {
-    const formData = new FormData();
-    formData.append('file', file);
-    const headers: any = {};
-    if (this.token) headers['Authorization'] = `Bearer ${this.token}`;
-
-    const res = await fetch(`${API_URL}/storage/upload/${folder}`, {
-      method: 'POST', headers, body: formData,
-    });
-    if (!res.ok) throw new Error('Upload failed');
-    return res.json();
+  // Family
+  async createFamily(name: string) {
+    return this.request<any>('/family', { method: 'POST', body: JSON.stringify({ name }) });
+  }
+  async getFamily() {
+    return this.request<any>('/family');
+  }
+  async addFamilyMember(username: string, role?: string) {
+    return this.request<any>('/family/members', { method: 'POST', body: JSON.stringify({ username, role }) });
+  }
+  async removeFamilyMember(userId: string) {
+    return this.request<any>(`/family/members/${userId}`, { method: 'DELETE' });
   }
 }
 

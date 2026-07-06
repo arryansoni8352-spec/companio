@@ -9,11 +9,36 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const port = configService.get('PORT') || 3001;
-  const corsOrigin = configService.get('CORS_ORIGIN') || 'http://localhost:3000';
+  const corsOriginEnv = configService.get('CORS_ORIGIN') || 'http://localhost:3000';
 
-  // CORS
+  // Parse comma-separated origins and build allowed list
+  const allowedOrigins = corsOriginEnv.split(',').map((o: string) => o.trim()).filter(Boolean);
+
+  // CORS - supports multiple origins + Vercel preview URLs
   app.enableCors({
-    origin: corsOrigin,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      // Allow requests with no origin (mobile apps, curl, server-to-server)
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      // Check explicit list
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      // Allow any *.vercel.app preview URL
+      if (/^https:\/\/.*\.vercel\.app$/.test(origin)) {
+        callback(null, true);
+        return;
+      }
+      // Allow localhost on any port (for dev)
+      if (/^http:\/\/localhost(:\d+)?$/.test(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
@@ -37,6 +62,6 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`🚀 COMPANIO API running on http://localhost:${port}`);
   console.log(`📡 WebSocket server ready`);
-  console.log(`🔒 CORS enabled for ${corsOrigin}`);
+  console.log(`🔒 CORS enabled for: ${allowedOrigins.join(', ')} + *.vercel.app + localhost:*`);
 }
 bootstrap();
