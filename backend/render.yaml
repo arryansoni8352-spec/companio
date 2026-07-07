@@ -4,11 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend
-<<<<<<< HEAD
-    buildCommand: npm install --include=dev && npm run build && npx prisma generate
-=======
     buildCommand: npm install --include=dev && npx prisma generate && npm run build
->>>>>>> 739bb1705b866ea5158bdc1cd7860b14b9987875
     startCommand: npx prisma db push && npm run start:prod
     envVars:
       - key: DATABASE_URL
