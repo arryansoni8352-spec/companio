@@ -3,7 +3,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import api from '@/lib/api';
+import api, { API_URL } from '@/lib/api';
+
+function resolveAvatar(avatar: string | undefined | null): string | null {
+  if (!avatar) return null;
+  if (avatar.startsWith('http')) return avatar;
+  if (avatar.startsWith('/uploads')) {
+    const backendBase = API_URL.replace(/\/api\/?$/, '');
+    return `${backendBase}${avatar}`;
+  }
+  return null;
+}
 
 interface Message {
   id: string;
@@ -211,8 +221,8 @@ export default function AIChatPage() {
             &larr;
           </Link>
           <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, overflow: 'hidden', position: 'relative' }}>
-            {ai?.avatar && (ai.avatar.startsWith('http') || ai.avatar.startsWith('/')) ? (
-              <img src={ai.avatar} alt={ai.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            {resolveAvatar(ai?.avatar) ? (
+              <img src={resolveAvatar(ai?.avatar)!} alt={ai?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
               ai?.avatar || '🤖'
             )}

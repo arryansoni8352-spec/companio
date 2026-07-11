@@ -2,9 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import api, { API_URL } from '@/lib/api';
 
 const DEFAULT_AVATARS = ['🤖', '🦄', '🦁', '🦊', '🐱', '🐼', '🐨', '🐙', '👾', '🧠', '✨', '💝'];
+
+// Resolve avatar URL: absolute URLs pass through; relative /uploads/... paths get backend base prepended
+function resolveAvatar(avatar: string | undefined | null): string | null {
+  if (!avatar) return null;
+  if (avatar.startsWith('http')) return avatar;
+  if (avatar.startsWith('/uploads')) {
+    const backendBase = API_URL.replace(/\/api\/?$/, '');
+    return `${backendBase}${avatar}`;
+  }
+  return null; // emoji — handled separately
+}
 
 export default function AICompanionsPage() {
   const [companions, setCompanions] = useState<any[]>([]);
@@ -88,8 +99,8 @@ export default function AICompanionsPage() {
               
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, marginBottom: 'var(--space-4)', overflow: 'hidden', position: 'relative' }}>
-                  {ai.avatar && (ai.avatar.startsWith('http') || ai.avatar.startsWith('/')) ? (
-                    <img src={ai.avatar} alt={ai.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  {resolveAvatar(ai.avatar) ? (
+                    <img src={resolveAvatar(ai.avatar)!} alt={ai.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
                     ai.avatar || '🤖'
                   )}
@@ -187,9 +198,9 @@ export default function AICompanionsPage() {
                       >
                         📷 Upload Custom Picture
                       </label>
-                      {avatar && (avatar.startsWith('http') || avatar.startsWith('/')) && (
+                      {resolveAvatar(avatar) && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <img src={avatar} alt="Uploaded avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                          <img src={resolveAvatar(avatar)!} alt="Uploaded avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
                           <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)' }}>Uploaded!</span>
                         </div>
                       )}
