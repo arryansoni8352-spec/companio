@@ -34,9 +34,16 @@ export class UsersController {
     return this.usersService.getSuggestedUsers(userId);
   }
 
-  @Get(':username')
-  async getProfile(@Param('username') username: string, @Query('viewerId') viewerId?: string) {
-    return this.usersService.getProfile(username, viewerId);
+  @Get('ai-keys/config')
+  @UseGuards(JwtAuthGuard)
+  async getAiKeys(@CurrentUser('id') userId: string) {
+    return this.usersService.getAIKeys(userId);
+  }
+
+  @Put('ai-keys/config')
+  @UseGuards(JwtAuthGuard)
+  async updateAiKeys(@CurrentUser('id') userId: string, @Body() dto: UpdateAiKeysDto) {
+    return this.usersService.updateAIKeys(userId, dto);
   }
 
   @Put('profile')
@@ -69,15 +76,9 @@ export class UsersController {
     return this.usersService.getFollowing(username, skip, take);
   }
 
-  @Get('ai-keys/config')
-  @UseGuards(JwtAuthGuard)
-  async getAiKeys(@CurrentUser('id') userId: string) {
-    return this.usersService.getAIKeys(userId);
-  }
-
-  @Put('ai-keys/config')
-  @UseGuards(JwtAuthGuard)
-  async updateAiKeys(@CurrentUser('id') userId: string, @Body() dto: UpdateAiKeysDto) {
-    return this.usersService.updateAIKeys(userId, dto);
+  // :username wildcard MUST be last to avoid capturing static paths like 'ai-keys'
+  @Get(':username')
+  async getProfile(@Param('username') username: string, @Query('viewerId') viewerId?: string) {
+    return this.usersService.getProfile(username, viewerId);
   }
 }
