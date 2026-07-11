@@ -1,69 +1,83 @@
-import Link from 'next/link';
+'use client';
 
-export default function LandingPage() {
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import api from '@/lib/api';
+
+export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('companio_token');
+    if (token) {
+      router.replace('/home');
+    } else {
+      setLoading(false);
+    }
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#030712' }}>
+        <div className="spinner" style={{ width: 40, height: 40 }} />
+      </div>
+    );
+  }
+
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden' }}>
-      {/* Background Glow Effects */}
-      <div className="bg-glow" style={{ top: '-10%', left: '-10%' }} />
-      <div className="bg-glow" style={{ bottom: '-10%', right: '-10%', filter: 'blur(120px)', opacity: 0.3, background: 'var(--accent-secondary)' }} />
-
-      {/* Navigation */}
-      <nav style={{ padding: '24px 48px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', zIndex: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          </div>
-          <span style={{ fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.5px' }}>COMPANIO</span>
-        </div>
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-          <Link href="/login" style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Log In</Link>
-          <Link href="/signup" className="btn btn-primary">Get Started</Link>
-        </div>
-      </nav>
-
-      {/* Hero Section */}
-      <main className="container flex-center" style={{ minHeight: 'calc(100vh - 100px)', flexDirection: 'column', textAlign: 'center', position: 'relative', zIndex: 10 }}>
-        <div className="animate-slide-up" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <div style={{ display: 'inline-block', padding: '8px 16px', borderRadius: 'var(--radius-full)', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', marginBottom: '24px', fontSize: '0.875rem', fontWeight: 600, color: 'var(--accent-secondary)' }}>
-            ✨ The Next Generation of Social Connection
-          </div>
-          
-          <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5.5rem)', marginBottom: '24px' }}>
-            Never feel <span className="text-gradient animate-float" style={{ display: 'inline-block' }}>disconnected</span> again.
-          </h1>
-          
-          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '40px', maxWidth: '600px', margin: '0 auto 40px auto', lineHeight: 1.6 }}>
-            Discover vibrant communities, meet AI companions tailored to your personality, and instantly match with people who share your vibe.
-          </p>
-          
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-            <Link href="/signup" className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.125rem' }}>
-              Join the Network
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </Link>
-            <Link href="/about" className="btn btn-secondary glass-panel" style={{ padding: '16px 32px', fontSize: '1.125rem' }}>
-              Explore Features
-            </Link>
-          </div>
-        </div>
-
-        {/* Floating UI Elements (Decorative) */}
-        <div className="glass-panel animate-float" style={{ position: 'absolute', left: '10%', top: '20%', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: '0s' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #FF6B6B, #EE5A24)' }} />
-          <div>
-            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Match Found!</div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>Say hi to Sarah 👋</div>
-          </div>
-        </div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at 50% 50%, #0c1020 0%, #030712 100%)', padding: 'var(--space-6)', textAlign: 'center' }}>
+      
+      <div className="glass-panel" style={{ maxWidth: 460, width: '100%', padding: 'var(--space-10) var(--space-8)', borderRadius: 'var(--radius-2xl)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', border: '1px solid rgba(255,255,255,0.06)' }}>
         
-        <div className="glass-panel animate-float" style={{ position: 'absolute', right: '15%', top: '40%', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', animationDelay: '2s' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #4834D4, #686DE0)' }} />
+        {/* Glowing Brand Title */}
+        <h1 className="glow-text" style={{ fontSize: '42px', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 'var(--space-2)' }}>
+          COMPANIO
+        </h1>
+        
+        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', maxWidth: 360, margin: '0 auto var(--space-8)', lineHeight: 1.6 }}>
+          Discover verified rental companions, match in real-time, and customize personal AI friends.
+        </p>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', maxWidth: 280, margin: '0 auto var(--space-8)' }}>
+          <button
+            className="btn btn-lg btn-primary hover-lift"
+            onClick={() => router.push('/login')}
+            style={{ width: '100%', borderRadius: 'var(--radius-md)' }}
+          >
+            Enter Portal
+          </button>
+          <button
+            className="btn btn-lg btn-secondary hover-lift"
+            onClick={() => router.push('/login')}
+            style={{ width: '100%', borderRadius: 'var(--radius-md)', background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            Create Account
+          </button>
+        </div>
+
+        {/* Feature Blocks */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-4)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 'var(--space-6)', color: 'var(--text-secondary)', fontSize: '11px' }}>
           <div>
-            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>AI Companion</div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.75rem' }}>I'm here to listen.</div>
+            <div style={{ fontSize: 24, marginBottom: '4px' }}>🛡️</div>
+            <strong style={{ color: 'white', display: 'block', marginBottom: '2px' }}>Verified Users</strong>
+            <span>Trusted profiles</span>
+          </div>
+          <div>
+            <div style={{ fontSize: 24, marginBottom: '4px' }}>🌎</div>
+            <strong style={{ color: 'white', display: 'block', marginBottom: '2px' }}>Live Connections</strong>
+            <span>Real-time matching</span>
+          </div>
+          <div>
+            <div style={{ fontSize: 24, marginBottom: '4px' }}>🤖</div>
+            <strong style={{ color: 'white', display: 'block', marginBottom: '2px' }}>Custom AI</strong>
+            <span>Voice calling</span>
           </div>
         </div>
-      </main>
+
+      </div>
+
     </div>
   );
 }
