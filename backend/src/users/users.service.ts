@@ -204,4 +204,58 @@ export class UsersService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async getAIKeys(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { geminiKey: true, openaiKey: true, claudeKey: true }
+    });
+    if (!user) throw new NotFoundException('User not found');
+    
+    const maskKey = (key: string | null) => {
+      if (!key) return '';
+      if (key.length <= 8) return '••••••••';
+      return `${key.slice(0, 4)}••••••••${key.slice(-4)}`;
+    };
+    
+    return {
+      geminiKey: maskKey(user.geminiKey),
+      openaiKey: maskKey(user.openaiKey),
+      claudeKey: maskKey(user.claudeKey),
+      hasGemini: !!user.geminiKey,
+      hasOpenai: !!user.openaiKey,
+      hasClaude: !!user.claudeKey,
+    };
+  }
+
+  async updateAIKeys(userId: string, data: { geminiKey?: string; openaiKey?: string; claudeKey?: string }) {
+    const updateData: any = {};
+    
+    if (data.geminiKey !== undefined) {
+      if (data.geminiKey === '') {
+        updateData.geminiKey = null;
+      } else if (!data.geminiKey.includes('••••')) {
+        updateData.geminiKey = data.geminiKey;
+      }
+    }
+    if (data.openaiKey !== undefined) {
+      if (data.openaiKey === '') {
+        updateData.openaiKey = null;
+      } else if (!data.openaiKey.includes('••••')) {
+        updateData.openaiKey = data.openaiKey;
+      }
+    }
+    if (data.claudeKey !== undefined) {
+      if (data.claudeKey === '') {
+        updateData.claudeKey = null;
+      } else if (!data.claudeKey.includes('••••')) {
+        updateData.claudeKey = data.claudeKey;
+      }
+    }
+    
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+    });
+  }
 }

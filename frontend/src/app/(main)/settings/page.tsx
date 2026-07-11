@@ -6,10 +6,42 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<any[]>([]);
   const [activeSection, setActiveSection] = useState('privacy');
 
-  useEffect(() => { if (activeSection === 'privacy') loadSettings(); }, [activeSection]);
+  // AI API Keys State
+  const [geminiKey, setGeminiKey] = useState('');
+  const [openaiKey, setOpenaiKey] = useState('');
+  const [claudeKey, setClaudeKey] = useState('');
+  const [savingKeys, setSavingKeys] = useState(false);
+
+  useEffect(() => { 
+    if (activeSection === 'privacy') loadSettings(); 
+    else if (activeSection === 'ai') loadAIKeys();
+  }, [activeSection]);
 
   const loadSettings = async () => {
     try { const data = await api.getPrivacySettings(); setSettings(data); } catch {}
+  };
+
+  const loadAIKeys = async () => {
+    try {
+      const data = await api.getAIKeysConfig();
+      setGeminiKey(data.geminiKey || '');
+      setOpenaiKey(data.openaiKey || '');
+      setClaudeKey(data.claudeKey || '');
+    } catch {}
+  };
+
+  const saveAIKeys = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingKeys(true);
+    try {
+      await api.updateAIKeysConfig({ geminiKey, openaiKey, claudeKey });
+      alert('API keys updated successfully!');
+      loadAIKeys();
+    } catch (err: any) {
+      alert(err.message || 'Failed to update API keys.');
+    } finally {
+      setSavingKeys(false);
+    }
   };
 
   const updateSetting = async (key: string, value: string) => {
@@ -23,6 +55,7 @@ export default function SettingsPage() {
     { id: 'privacy', label: '🔒 Privacy Center', icon: '🔒' },
     { id: 'notifications', label: '🔔 Notifications', icon: '🔔' },
     { id: 'security', label: '🛡️ Security', icon: '🛡️' },
+    { id: 'ai', label: '🤖 AI Keys', icon: '🤖' },
     { id: 'account', label: '👤 Account', icon: '👤' },
   ];
 
@@ -86,6 +119,59 @@ export default function SettingsPage() {
               <button className="btn btn-primary btn-sm">Update Password</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeSection === 'ai' && (
+        <div style={{ padding: 'var(--space-4)' }}>
+          <div style={{ padding: 'var(--space-4)', background: 'rgba(99, 102, 241, 0.08)', margin: '0 0 var(--space-4) 0', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(99, 102, 241, 0.15)' }}>
+            <h3 style={{ fontWeight: 600, color: 'var(--color-primary-light)', marginBottom: 'var(--space-1)' }}>🤖 Personal AI Connections</h3>
+            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)' }}>
+              Enter your own Google Gemini, OpenAI (ChatGPT), or Anthropic Claude API keys. 
+              If configured, your custom AI companions will call your own API keys directly, saving platform credits!
+            </p>
+          </div>
+
+          <form onSubmit={saveAIKeys} className="card">
+            <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+              <div className="input-group">
+                <label style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'block', marginBottom: '6px' }}>Google Gemini API Key</label>
+                <input 
+                  className="input" 
+                  type="password" 
+                  placeholder={geminiKey ? "••••••••••••••••" : "AIzaSy..."} 
+                  value={geminiKey} 
+                  onChange={(e) => setGeminiKey(e.target.value)} 
+                />
+              </div>
+
+              <div className="input-group">
+                <label style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'block', marginBottom: '6px' }}>OpenAI (ChatGPT) API Key</label>
+                <input 
+                  className="input" 
+                  type="password" 
+                  placeholder={openaiKey ? "••••••••••••••••" : "sk-proj-..."} 
+                  value={openaiKey} 
+                  onChange={(e) => setOpenaiKey(e.target.value)} 
+                />
+              </div>
+
+              <div className="input-group">
+                <label style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', display: 'block', marginBottom: '6px' }}>Anthropic Claude API Key</label>
+                <input 
+                  className="input" 
+                  type="password" 
+                  placeholder={claudeKey ? "••••••••••••••••" : "sk-ant-..."} 
+                  value={claudeKey} 
+                  onChange={(e) => setClaudeKey(e.target.value)} 
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ alignSelf: 'flex-start', marginTop: '4px' }} disabled={savingKeys}>
+                {savingKeys ? 'Saving...' : 'Save API Keys'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

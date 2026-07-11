@@ -238,6 +238,41 @@ class ApiClient {
   async removeFamilyMember(userId: string) {
     return this.request<any>(`/family/members/${userId}`, { method: 'DELETE' });
   }
+
+  // AI Keys Settings
+  async getAIKeysConfig() {
+    return this.request<any>('/users/ai-keys/config');
+  }
+  async updateAIKeysConfig(data: { geminiKey?: string; openaiKey?: string; claudeKey?: string }) {
+    return this.request<any>('/users/ai-keys/config', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // File Upload Helper
+  async uploadFile(file: File, folder: string) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const headers: any = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    
+    const res = await fetch(`${API_URL}/storage/upload/${folder}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: 'Upload failed' }));
+      throw new Error(err.message || 'Upload failed');
+    }
+    
+    return res.json();
+  }
 }
 
 export const api = new ApiClient();

@@ -13,6 +13,12 @@ class UpdateProfileDto {
   @IsOptional() @IsArray() interests?: string[];
 }
 
+class UpdateAiKeysDto {
+  @IsOptional() @IsString() geminiKey?: string;
+  @IsOptional() @IsString() openaiKey?: string;
+  @IsOptional() @IsString() claudeKey?: string;
+}
+
 @Controller('users')
 export class UsersController {
   constructor(private usersService: UsersService) {}
@@ -61,5 +67,17 @@ export class UsersController {
     @Query('take') take = 20,
   ) {
     return this.usersService.getFollowing(username, skip, take);
+  }
+
+  @Get('ai-keys/config')
+  @UseGuards(JwtAuthGuard)
+  async getAiKeys(@CurrentUser('id') userId: string) {
+    return this.usersService.getAIKeys(userId);
+  }
+
+  @Put('ai-keys/config')
+  @UseGuards(JwtAuthGuard)
+  async updateAiKeys(@CurrentUser('id') userId: string, @Body() dto: UpdateAiKeysDto) {
+    return this.usersService.updateAIKeys(userId, dto);
   }
 }

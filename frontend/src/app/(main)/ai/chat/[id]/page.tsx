@@ -210,8 +210,12 @@ export default function AIChatPage() {
           <Link href="/ai" style={{ fontSize: 20, display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>
             &larr;
           </Link>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, overflow: 'hidden' }}>
-            {ai?.avatar && ai.avatar.length < 5 ? ai.avatar : '🤖'}
+          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, overflow: 'hidden', position: 'relative' }}>
+            {ai?.avatar && (ai.avatar.startsWith('http') || ai.avatar.startsWith('/')) ? (
+              <img src={ai.avatar} alt={ai.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              ai?.avatar || '🤖'
+            )}
           </div>
           <div>
             <h3 style={{ fontWeight: 700, fontSize: 'var(--font-size-base)', color: 'var(--text-primary)' }}>{ai?.name || 'AI Friend'}</h3>

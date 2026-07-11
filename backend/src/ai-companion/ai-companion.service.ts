@@ -102,17 +102,23 @@ export class AICompanionService implements OnModuleInit {
       data: { conversationId: conv.id, role: 'user', content },
     });
 
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { geminiKey: true, openaiKey: true, claudeKey: true }
+    });
+
     let generatedReply = '';
 
     // 1. Check for Gemini Key
-    if (process.env.GEMINI_API_KEY) {
+    const geminiKey = user?.geminiKey || process.env.GEMINI_API_KEY;
+    if (geminiKey) {
       try {
         const history = (conv.messages || []).slice(-10).map((m: any) => ({
           role: m.role === 'user' ? 'user' : 'model',
           parts: [{ text: m.content }]
         }));
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -144,7 +150,8 @@ export class AICompanionService implements OnModuleInit {
     }
 
     // 2. Check for OpenAI Key if Gemini wasn't used or failed
-    if (!generatedReply && process.env.OPENAI_API_KEY) {
+    const openaiKey = user?.openaiKey || process.env.OPENAI_API_KEY;
+    if (!generatedReply && openaiKey) {
       try {
         const history = (conv.messages || []).slice(-10).map((m: any) => ({
           role: m.role === 'user' ? 'user' : 'assistant',
@@ -155,7 +162,7 @@ export class AICompanionService implements OnModuleInit {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+            'Authorization': `Bearer ${openaiKey}`
           },
           body: JSON.stringify({
             model: 'gpt-4o-mini',
@@ -175,6 +182,46 @@ export class AICompanionService implements OnModuleInit {
         }
       } catch (err) {
         console.error('OpenAI API call failed:', err);
+      }
+    }
+
+    // 3. Check for Claude Key
+    const claudeKey = user?.claudeKey || process.env.CLAUDE_API_KEY;
+    if (!generatedReply && claudeKey) {
+      try {
+        const history = (conv.messages || []).slice(-10).map((m: any) => ({
+          role: m.role === 'user' ? 'user' : 'assistant',
+          content: m.content
+        }));
+
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': claudeKey,
+            'anthropic-version': '2023-06-01'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-sonnet-20241022',
+            max_tokens: 1024,
+            system: `${conv.aiCompanion.systemPrompt || ''} Personality: ${conv.aiCompanion.personality || ''}`,
+            messages: [
+              ...history,
+              { role: 'user', content }
+            ],
+            temperature: 0.7
+          })
+        });
+
+        if (response.ok) {
+          const json = await response.json();
+          const text = json.content?.[0]?.text;
+          if (text) generatedReply = text;
+        } else {
+          console.error('Claude error response:', await response.text());
+        }
+      } catch (err) {
+        console.error('Claude API call failed:', err);
       }
     }
 

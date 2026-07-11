@@ -28,6 +28,9 @@ model User {
   updatedAt     DateTime @updatedAt
   deletedAt     DateTime?
   isDisabled    Boolean  @default(false)
+  geminiKey     String?
+  openaiKey     String?
+  claudeKey     String?
   familyId    String?   // optional link to family
   family      Family?   @relation(fields: [familyId], references: [id])
 

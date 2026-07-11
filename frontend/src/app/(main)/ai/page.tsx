@@ -88,7 +88,11 @@ export default function AICompanionsPage() {
               
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 36, marginBottom: 'var(--space-4)', overflow: 'hidden', position: 'relative' }}>
-                  {ai.avatar && ai.avatar.length < 5 ? ai.avatar : '🤖'}
+                  {ai.avatar && (ai.avatar.startsWith('http') || ai.avatar.startsWith('/')) ? (
+                    <img src={ai.avatar} alt={ai.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    ai.avatar || '🤖'
+                  )}
                   {ai.isPremium && (
                     <div style={{ position: 'absolute', top: 0, right: 0, background: 'var(--color-accent-light)', fontSize: 8, padding: '2px 6px', color: '#000', fontWeight: 800, borderRadius: 'var(--radius-sm)' }}>
                       PRO
@@ -148,8 +152,8 @@ export default function AICompanionsPage() {
                     </select>
                   </div>
                   <div className="input-group">
-                    <label>Choose Avatar Emoji</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: 'var(--bg-secondary)', padding: '6px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+                    <label>Choose Avatar Emoji or Upload Picture</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', background: 'var(--bg-secondary)', padding: '6px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)', marginBottom: '8px' }}>
                       {DEFAULT_AVATARS.map((av) => (
                         <span 
                           key={av} 
@@ -157,6 +161,38 @@ export default function AICompanionsPage() {
                           onClick={() => setAvatar(av)}
                         >{av}</span>
                       ))}
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        id="avatar-upload"
+                        style={{ display: 'none' }}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            const res = await api.uploadFile(file, 'avatars');
+                            setAvatar(res.url);
+                          } catch (err: any) {
+                            alert('Upload failed: ' + err.message);
+                          }
+                        }}
+                      />
+                      <label 
+                        htmlFor="avatar-upload" 
+                        className="btn btn-secondary btn-sm"
+                        style={{ cursor: 'pointer', margin: 0 }}
+                      >
+                        📷 Upload Custom Picture
+                      </label>
+                      {avatar && (avatar.startsWith('http') || avatar.startsWith('/')) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <img src={avatar} alt="Uploaded avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                          <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-success)' }}>Uploaded!</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
