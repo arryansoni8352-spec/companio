@@ -1,27 +1,18 @@
-import '@/styles/globals.css';
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'COMPANIO — Privacy-First Connections Platform',
-  description: 'Privacy-first social connections. Meet live matches, book verified rental companions, and chat with custom AI friends.',
-  keywords: ['connections', 'privacy', 'companionship', 'ai friend', 'matchmaking'],
-  manifest: '/manifest.json',
-  icons: { icon: '/favicon.ico' },
+  title: "Companio | Connect. Thrive. Together.",
+  description: "The ultimate social platform for discovering communities, AI friends, and real-time connections.",
 };
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
-  ],
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" data-theme="dark">
       <body>{children}</body>
     </html>
   );

@@ -1,3 +1,7 @@
+databases:
+  - name: companio-db
+    plan: free
+
 services:
   - type: web
     name: companio-backend
@@ -8,7 +12,9 @@ services:
     startCommand: npx prisma db push && npm run start:prod
     envVars:
       - key: DATABASE_URL
-        value: file:./dev.db
+        fromDatabase:
+          name: companio-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_REFRESH_SECRET
@@ -20,7 +26,7 @@ services:
       - key: PORT
         value: 3001
       - key: CORS_ORIGIN
-        value: https://frontend-lake-nine-29.vercel.app
+        value: https://companio.vercel.app,https://frontend-lake-nine-29.vercel.app
       - key: NODE_ENV
         value: production
       - key: UPLOAD_DIR
