@@ -68,7 +68,6 @@ export default function RandomMeetPage() {
 
     socketRef.current.on('match:ended', () => {
       endMatch(false);
-      // Auto reconnect searches if partner skips
       startSearching();
     });
 
@@ -94,7 +93,6 @@ export default function RandomMeetPage() {
       }
     });
 
-    // Custom text chat message channel over WebRTC socket
     socketRef.current.on('match:text_message', (data: { text: string }) => {
       setChatMessages(prev => [...prev, {
         sender: 'partner',
@@ -235,13 +233,14 @@ export default function RandomMeetPage() {
     };
 
     if (isInitiator) {
-      const offer = await peerRef.current.createOffer();
-      await peerRef.current.setLocalDescription(offer);
-      socketRef.current?.emit('webrtc:offer', { targetUserId, offer, callId });
+      const offer = peerRef.current.createOffer ? await peerRef.current.createOffer() : null;
+      if (offer) {
+        await peerRef.current.setLocalDescription(offer);
+        socketRef.current?.emit('webrtc:offer', { targetUserId, offer, callId });
+      }
     }
   };
 
-  // Toggle Mute / Camera
   const toggleMute = () => {
     if (localStream) {
       const audioTrack = localStream.getAudioTracks()[0];
@@ -262,7 +261,6 @@ export default function RandomMeetPage() {
     }
   };
 
-  // Submit Text Chat Messages
   const sendChatMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || !matchedUserIdRef.current) return;
@@ -281,7 +279,6 @@ export default function RandomMeetPage() {
     setChatInput('');
   };
 
-  // Manage interest tags
   const addInterest = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
@@ -298,94 +295,109 @@ export default function RandomMeetPage() {
   };
 
   return (
-    <div style={{ height: 'calc(100vh - var(--nav-height))', display: 'flex', background: '#030712', color: '#FFFFFF', overflow: 'hidden', position: 'relative' }}>
+    <div style={{
+      height: 'calc(100vh - 80px)',
+      display: 'flex',
+      background: 'var(--bg-primary)',
+      overflow: 'hidden',
+      position: 'relative',
+      margin: '0 calc(-1 * var(--space-5))',
+      borderRadius: 'var(--radius-2xl)',
+      border: '1px solid var(--border-light)'
+    }}>
       
       {/* Top Banner (Overlaid) */}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', padding: 'var(--space-4)', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to bottom, rgba(3,7,18,0.9), rgba(3,7,18,0))' }}>
+      <div className="glass-panel" style={{
+        position: 'absolute', top: 0, left: 0, width: '100%',
+        padding: 'var(--space-3) var(--space-5)', zIndex: 10,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        borderBottom: '1px solid var(--border-light)'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <span className="status-pulse-green"></span>
-          <h2 style={{ fontSize: 'var(--font-size-md)', fontWeight: 700, letterSpacing: 'var(--letter-spacing-tight)' }}>COMPANIO MEET</h2>
+          <span className="status-pulse-green" style={{ width: 8, height: 8 }}></span>
+          <h2 style={{ fontSize: 'var(--font-size-base)', fontWeight: 700, letterSpacing: 'var(--letter-spacing-tight)', color: 'var(--text-primary)' }}>Live Matching</h2>
         </div>
         {status === 'matched' && (
-          <button className="btn btn-primary glow-text" style={{ padding: '8px 20px', borderRadius: 'var(--radius-full)' }} onClick={skipMatch}>
-            Skip [Space] &rarr;
+          <button className="btn btn-primary btn-sm" onClick={skipMatch}>
+            Skip Connection &rarr;
           </button>
         )}
       </div>
 
       {/* Main View Area */}
-      <div style={{ flex: 1, display: 'flex', position: 'relative', background: '#020617', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ flex: 1, display: 'flex', position: 'relative', background: 'var(--bg-secondary)', alignItems: 'center', justifyContent: 'center' }}>
         
         {/* SETUP SCREEN */}
         {status === 'idle' && (
-          <div className="glass-panel" style={{ maxWidth: 460, width: '90%', padding: 'var(--space-8)', borderRadius: 'var(--radius-xl)', zIndex: 20, textAlign: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: 56, marginBottom: 'var(--space-4)' }}>🌍</div>
-            <h1 className="glow-text" style={{ fontSize: 'var(--font-size-2xl)', fontWeight: 800, marginBottom: 'var(--space-2)' }}>Live Connection Portal</h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-6)' }}>
-              Instantly match with random friends worldwide. Filters verify location matching and mutual interests.
-            </p>
-
-            {/* Country Selector */}
-            <div style={{ textAlign: 'left', marginBottom: 'var(--space-4)' }}>
-              <label style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>MATCH REGION</label>
-              <select className="select" style={{ width: '100%', padding: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: 'var(--radius-md)' }} value={country} onChange={(e) => setCountry(e.target.value)}>
-                {COUNTRIES.map(c => <option key={c} value={c} style={{ background: '#111827' }}>{c}</option>)}
-              </select>
-            </div>
-
-            {/* Mode Selector */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-              <button 
-                className={`btn ${matchMode === 'video' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ borderRadius: 'var(--radius-md)', padding: '10px 0' }}
-                onClick={() => setMatchMode('video')}
-              >📹 Video Call</button>
-              <button 
-                className={`btn ${matchMode === 'voice' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ borderRadius: 'var(--radius-md)', padding: '10px 0' }}
-                onClick={() => setMatchMode('voice')}
-              >🔊 Voice Call</button>
-            </div>
-
-            {/* Interests Input */}
-            <div style={{ textAlign: 'left', marginBottom: 'var(--space-6)' }}>
-              <label style={{ fontSize: 'var(--font-size-xs)', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>MUTUAL INTERESTS</label>
-              <input 
-                type="text"
-                placeholder="Type interest & press Enter..." 
-                value={interestInput}
-                onChange={(e) => setInterestInput(e.target.value)}
-                onKeyDown={addInterest}
-                className="input"
-                style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 'var(--radius-md)', padding: '12px' }}
-              />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: 'var(--space-2)' }}>
-                {interests.map(tag => (
-                  <span key={tag} className="companion-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', background: 'rgba(79,70,229,0.15)', color: 'var(--color-primary-light)' }} onClick={() => removeInterest(tag)}>
-                    #{tag} <span style={{ opacity: 0.6 }}>&times;</span>
-                  </span>
-                ))}
+          <div className="modal" style={{ position: 'relative', width: '90%', maxWidth: 440, display: 'block', boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border-light)', animation: 'fadeInScale 0.4s var(--ease-spring)' }}>
+            <div className="modal-header" style={{ justifyContent: 'center', padding: 'var(--space-6) var(--space-6) var(--space-3)' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-2)' }}>
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, color: 'white' }}>🌍</div>
+                <h2 className="modal-title" style={{ fontSize: 'var(--font-size-xl)', fontWeight: 800 }}>Live Portal</h2>
               </div>
             </div>
+            
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)', padding: 'var(--space-5) var(--space-6) var(--space-6)' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', textAlign: 'center', lineHeight: 'var(--line-height-relaxed)', margin: 0 }}>
+                Instantly connect with other members globally based on region filters and shared interests.
+              </p>
 
-            <button className="btn btn-primary btn-full btn-lg hover-lift" style={{ borderRadius: 'var(--radius-lg)' }} onClick={startSearching}>
-              Start Matchmaking
-            </button>
+              <div className="input-group">
+                <label>Region Filter</label>
+                <select className="select" style={{ width: '100%' }} value={country} onChange={(e) => setCountry(e.target.value)}>
+                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+
+              <div className="input-group">
+                <label>Interests</label>
+                <input 
+                  type="text"
+                  placeholder="Type tag & press Enter..." 
+                  value={interestInput}
+                  onChange={(e) => setInterestInput(e.target.value)}
+                  onKeyDown={addInterest}
+                  className="input"
+                />
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: 'var(--space-2)' }}>
+                  {interests.map(tag => (
+                    <span key={tag} className="companion-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }} onClick={() => removeInterest(tag)}>
+                      #{tag} <span style={{ opacity: 0.6 }}>&times;</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', marginTop: 'var(--space-2)' }}>
+                <button 
+                  className={`btn ${matchMode === 'video' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setMatchMode('video')}
+                >📹 Video Call</button>
+                <button 
+                  className={`btn ${matchMode === 'voice' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setMatchMode('voice')}
+                >🔊 Voice Call</button>
+              </div>
+
+              <button className="btn btn-primary btn-full btn-lg hover-lift" style={{ marginTop: 'var(--space-2)' }} onClick={startSearching}>
+                Start Matching
+              </button>
+            </div>
           </div>
         )}
 
         {/* SEARCHING ANIMATION */}
         {status === 'searching' && (
-          <div style={{ zIndex: 20, textAlign: 'center' }}>
-            <div style={{ position: 'relative', width: 200, height: 200, margin: '0 auto var(--space-6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ zIndex: 20, textAlign: 'center', padding: 'var(--space-6)' }}>
+            <div style={{ position: 'relative', width: 180, height: 180, margin: '0 auto var(--space-6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <div className="radar-ring" style={{ animationDelay: '0s' }}></div>
               <div className="radar-ring" style={{ animationDelay: '0.8s' }}></div>
               <div className="radar-ring" style={{ animationDelay: '1.6s' }}></div>
-              <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, var(--color-primary), var(--color-accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, boxShadow: 'var(--shadow-glow)', zIndex: 5 }}>🔍</div>
+              <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, zIndex: 5, color: 'white', boxShadow: 'var(--shadow-glow-primary)' }}>🔍</div>
             </div>
-            <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: '6px' }}>Scanning Connection Nodes...</h3>
+            <h3 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 700, marginBottom: '6px' }}>Searching Nodes...</h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-6)' }}>
-              Looking for users in <span style={{ color: 'white', fontWeight: 600 }}>{country}</span> {interests.length > 0 && `sharing #${interests.join(', #')}`}
+              Looking for companions in <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{country}</span> {interests.length > 0 && `sharing #${interests.join(', #')}`}
             </p>
             <button className="btn btn-secondary btn-sm" style={{ padding: '8px 24px', borderRadius: 'var(--radius-full)' }} onClick={cancelSearch}>
               Cancel Search
@@ -393,7 +405,7 @@ export default function RandomMeetPage() {
           </div>
         )}
 
-        {/* ACTIVE WEBRTC VIDEO ELEMENT */}
+        {/* ACTIVE CALL VIEW */}
         {status === 'matched' && (
           <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: '#000' }}>
             {matchMode === 'video' && remoteStream ? (
@@ -404,21 +416,20 @@ export default function RandomMeetPage() {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-4)', background: 'radial-gradient(circle, #1e1b4b 0%, #030712 100%)' }}>
-                <div style={{ width: 120, height: 120, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48, border: '1px solid rgba(255,255,255,0.1)' }}>🔊</div>
-                <h4 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600 }}>Voice Match Active</h4>
-                <p style={{ color: 'var(--text-secondary)' }}>You are connected via high-fidelity audio channel</p>
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-4)', background: 'radial-gradient(circle, var(--color-primary-alpha-20) 0%, #000 100%)' }}>
+                <div style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, border: '1px solid rgba(255,255,255,0.1)' }}>🔊</div>
+                <h4 style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'white' }}>Voice Session Connected</h4>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'var(--font-size-sm)' }}>High-fidelity audio channel is active</p>
               </div>
             )}
             
-            {/* Remote audio loopback container */}
-            <video ref={remoteVideoRef} autoPlay playsInline style={{ display: matchMode === 'voice' ? 'none' : 'none' }} />
+            <video ref={remoteVideoRef} autoPlay playsInline style={{ display: 'none' }} />
           </div>
         )}
 
-        {/* Local Stream PIP (Draggable Frame mock) */}
+        {/* Local Stream PIP */}
         {localStream && status === 'matched' && (
-          <div className="pip-video-window" style={{ background: '#111827', pointerEvents: 'none' }}>
+          <div className="pip-video-window" style={{ background: '#1C1C1E', borderRadius: 'var(--radius-xl)' }}>
             <video 
               ref={localVideoRef} 
               autoPlay 
@@ -429,55 +440,69 @@ export default function RandomMeetPage() {
           </div>
         )}
 
-        {/* BOTTOM VIDEO CONTROLS PANEL */}
+        {/* FaceTime-style bottom floating panel controls */}
         {status === 'matched' && (
-          <div style={{ position: 'absolute', bottom: 24, left: 24, zIndex: 20, display: 'flex', gap: 'var(--space-2)' }}>
-            <button className="btn glass-panel" style={{ width: 44, height: 44, borderRadius: 'var(--radius-full)', padding: 0 }} onClick={toggleMute} title={isMuted ? 'Unmute microphone' : 'Mute microphone'}>
-              {isMuted ? '🎙️' : '🎤'}
+          <div className="glass-panel" style={{
+            position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 20, display: 'flex', gap: 'var(--space-2)', padding: '6px var(--space-3)',
+            borderRadius: 'var(--radius-full)', border: '1px solid var(--border-light)',
+            boxShadow: 'var(--shadow-lg)'
+          }}>
+            <button className="btn-icon btn-ghost btn-sm" onClick={toggleMute} title={isMuted ? 'Unmute microphone' : 'Mute microphone'} style={{ background: isMuted ? 'var(--color-error)' : 'rgba(255,255,255,0.06)', color: 'white' }}>
+              {isMuted ? '🔇' : '🎙️'}
             </button>
             {matchMode === 'video' && (
-              <button className="btn glass-panel" style={{ width: 44, height: 44, borderRadius: 'var(--radius-full)', padding: 0 }} onClick={toggleVideo} title={isVideoOff ? 'Turn camera on' : 'Turn camera off'}>
-                {isVideoOff ? '❌📹' : '📹'}
+              <button className="btn-icon btn-ghost btn-sm" onClick={toggleVideo} title={isVideoOff ? 'Turn camera on' : 'Turn camera off'} style={{ background: isVideoOff ? 'var(--color-error)' : 'rgba(255,255,255,0.06)', color: 'white' }}>
+                {isVideoOff ? '📷 Off' : '📷'}
               </button>
             )}
-            <button className="btn glass-panel" style={{ width: 44, height: 44, borderRadius: 'var(--radius-full)', padding: 0 }} onClick={() => setChatOpen(!chatOpen)} title="Toggle Side Chat">
+            <button className="btn-icon btn-ghost btn-sm" onClick={() => setChatOpen(!chatOpen)} title="Toggle Chat" style={{ background: chatOpen ? 'var(--color-primary-alpha-15)' : 'rgba(255,255,255,0.06)', color: 'white' }}>
               💬
             </button>
-            <button className="btn btn-danger" style={{ width: 44, height: 44, borderRadius: 'var(--radius-full)', padding: 0 }} onClick={() => endMatch(true)} title="Disconnect matching">
+            <button className="btn btn-danger btn-sm" style={{ minHeight: 'unset', width: 36, height: 36, padding: 0 }} onClick={() => endMatch(true)} title="Disconnect">
               🛑
             </button>
           </div>
         )}
       </div>
 
-      {/* TEXT CHAT SIDEBAR PANEL OVERLAY */}
+      {/* TEXT CHAT SIDEBAR */}
       {status === 'matched' && chatOpen && (
-        <div className="glass-panel" style={{ width: 330, borderLeft: '1px solid var(--border-light)', display: 'flex', flexDirection: 'column', height: '100%', zIndex: 15, position: 'relative' }}>
+        <div className="glass-panel" style={{
+          width: 320, borderLeft: '1px solid var(--border-light)',
+          display: 'flex', flexDirection: 'column', height: '100%', zIndex: 15,
+          background: 'var(--bg-primary)'
+        }}>
           
-          {/* Chat Header */}
+          {/* Header */}
           <div style={{ padding: 'var(--space-4)', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>Companion Live Chat</h3>
-            <button style={{ color: 'var(--text-secondary)', cursor: 'pointer' }} onClick={() => setChatOpen(false)}>&times;</button>
+            <h3 style={{ fontSize: 'var(--font-size-base)', fontWeight: 600 }}>Call Chat</h3>
+            <button className="btn-ghost" style={{ fontSize: 20, cursor: 'pointer', padding: 0 }} onClick={() => setChatOpen(false)}>&times;</button>
           </div>
 
-          {/* Messages Grid */}
+          {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
             {chatMessages.map((msg, idx) => (
-              <div key={idx} style={{ display: 'flex', flexDirection: 'column', alignSelf: msg.sender === 'me' ? 'flex-end' : (msg.sender === 'system' ? 'center' : 'flex-start'), maxWidth: '85%' }}>
+              <div key={idx} style={{
+                display: 'flex', flexDirection: 'column',
+                alignSelf: msg.sender === 'me' ? 'flex-end' : (msg.sender === 'system' ? 'center' : 'flex-start'),
+                maxWidth: '85%'
+              }}>
                 {msg.sender === 'system' ? (
-                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-primary-light)', background: 'rgba(79,70,229,0.08)', padding: '4px 12px', borderRadius: 'var(--radius-full)', textAlign: 'center' }}>
+                  <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-primary)', background: 'var(--color-primary-alpha-10)', padding: '4px 12px', borderRadius: 'var(--radius-full)', textAlign: 'center' }}>
                     {msg.text}
                   </span>
                 ) : (
                   <>
                     <div style={{ 
                       padding: '8px 12px', 
-                      borderRadius: 'var(--radius-md)', 
+                      borderRadius: 'var(--radius-lg)', 
                       fontSize: 'var(--font-size-sm)',
-                      background: msg.sender === 'me' ? 'var(--color-primary)' : 'rgba(255,255,255,0.06)',
-                      color: 'white',
-                      borderBottomRightRadius: msg.sender === 'me' ? 0 : 'var(--radius-md)',
-                      borderBottomLeftRadius: msg.sender === 'partner' ? 0 : 'var(--radius-md)'
+                      background: msg.sender === 'me' ? 'var(--gradient-primary)' : 'var(--bg-secondary)',
+                      color: msg.sender === 'me' ? 'white' : 'var(--text-primary)',
+                      borderBottomRightRadius: msg.sender === 'me' ? 0 : 'var(--radius-lg)',
+                      borderBottomLeftRadius: msg.sender === 'partner' ? 0 : 'var(--radius-lg)',
+                      border: msg.sender === 'me' ? 'none' : '1px solid var(--border-light)'
                     }}>
                       {msg.text}
                     </div>
@@ -489,17 +514,17 @@ export default function RandomMeetPage() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Chat Form */}
-          <form onSubmit={sendChatMessage} style={{ padding: 'var(--space-3)', borderTop: '1px solid var(--border-light)', background: 'rgba(255,255,255,0.01)', display: 'flex', gap: '6px' }}>
+          {/* Input Form */}
+          <form onSubmit={sendChatMessage} style={{ padding: 'var(--space-3)', borderTop: '1px solid var(--border-light)', display: 'flex', gap: '6px' }}>
             <input 
               type="text" 
-              placeholder="Type message..." 
+              placeholder="Send message..." 
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               className="input"
-              style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 'var(--radius-full)', padding: '10px 14px', fontSize: 'var(--font-size-sm)' }}
+              style={{ padding: '10px 14px', fontSize: 'var(--font-size-sm)', minHeight: 'unset', height: 38, borderRadius: 'var(--radius-full)' }}
             />
-            <button type="submit" className="btn btn-primary" style={{ padding: '0 16px', borderRadius: 'var(--radius-full)' }}>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0 16px', minHeight: 'unset', height: 38, borderRadius: 'var(--radius-full)' }}>
               Send
             </button>
           </form>

@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
 
-export default function HomePage() {
+export default function LandingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('companio_token');
@@ -14,70 +14,171 @@ export default function HomePage() {
       router.replace('/home');
     } else {
       setLoading(false);
+      // Slight delay for entry animation
+      requestAnimationFrame(() => setMounted(true));
     }
   }, [router]);
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#030712' }}>
-        <div className="spinner" style={{ width: 40, height: 40 }} />
+      <div className="loading-screen" data-theme="dark">
+        <div className="loading-logo">C</div>
       </div>
     );
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'radial-gradient(circle at 50% 50%, #0c1020 0%, #030712 100%)', padding: 'var(--space-6)', textAlign: 'center' }}>
-      
-      <div className="glass-panel" style={{ maxWidth: 460, width: '100%', padding: 'var(--space-10) var(--space-8)', borderRadius: 'var(--radius-2xl)', animation: 'fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        
-        {/* Glowing Brand Title */}
-        <h1 className="glow-text" style={{ fontSize: '42px', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 'var(--space-2)' }}>
-          COMPANIO
+    <div data-theme="dark" style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+      overflow: 'hidden',
+      background: '#000000',
+      padding: 'var(--space-6)',
+    }}>
+      {/* Animated Gradient Mesh Background */}
+      <div style={{
+        position: 'absolute', inset: 0, zIndex: 0, opacity: mounted ? 0.7 : 0,
+        transition: 'opacity 1.5s ease',
+        background: `
+          radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.18) 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.14) 0%, transparent 50%),
+          radial-gradient(ellipse at 50% 80%, rgba(236, 72, 153, 0.10) 0%, transparent 50%),
+          radial-gradient(ellipse at 60% 40%, rgba(6, 182, 212, 0.08) 0%, transparent 50%)
+        `,
+      }} />
+
+      {/* Floating Orbs */}
+      <div style={{
+        position: 'absolute', width: 300, height: 300, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%)',
+        top: '10%', left: '10%', filter: 'blur(60px)',
+        animation: 'float 8s ease-in-out infinite',
+      }} />
+      <div style={{
+        position: 'absolute', width: 250, height: 250, borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(236, 72, 153, 0.10) 0%, transparent 70%)',
+        bottom: '15%', right: '10%', filter: 'blur(60px)',
+        animation: 'float 10s ease-in-out infinite reverse',
+      }} />
+
+      {/* Main Content */}
+      <div style={{
+        position: 'relative', zIndex: 1, maxWidth: 500, width: '100%',
+        textAlign: 'center',
+        opacity: mounted ? 1 : 0,
+        transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}>
+        {/* Brand Icon */}
+        <div style={{
+          width: 64, height: 64, borderRadius: 'var(--radius-xl)',
+          background: 'var(--gradient-primary)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'white', fontWeight: 900, fontSize: 'var(--font-size-2xl)',
+          margin: '0 auto var(--space-6)',
+          boxShadow: '0 0 40px rgba(99, 102, 241, 0.3)',
+        }}>C</div>
+
+        {/* Display Heading */}
+        <h1 style={{
+          fontSize: 'clamp(2.5rem, 6vw, 3.75rem)',
+          fontWeight: 900,
+          letterSpacing: '-0.04em',
+          lineHeight: 1.1,
+          marginBottom: 'var(--space-4)',
+          background: 'linear-gradient(135deg, #F5F5F7 0%, #AEAEB2 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+        }}>
+          Connect.<br />
+          <span style={{
+            background: 'var(--gradient-primary)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>Beautifully.</span>
         </h1>
-        
-        <p style={{ fontSize: 'var(--font-size-base)', color: 'var(--text-secondary)', maxWidth: 360, margin: '0 auto var(--space-8)', lineHeight: 1.6 }}>
-          Discover verified rental companions, match in real-time, and customize personal AI friends.
+
+        <p style={{
+          fontSize: 'var(--font-size-lg)',
+          color: '#AEAEB2',
+          maxWidth: 380,
+          margin: '0 auto var(--space-8)',
+          lineHeight: 'var(--line-height-relaxed)',
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(12px)',
+          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s',
+        }}>
+          Meet real people, create AI companions, and build meaningful connections — all in one place.
         </p>
 
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)', maxWidth: 280, margin: '0 auto var(--space-8)' }}>
+        {/* CTA Buttons */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', gap: 'var(--space-3)',
+          maxWidth: 300, margin: '0 auto var(--space-10)',
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(12px)',
+          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s',
+        }}>
           <button
-            className="btn btn-lg btn-primary hover-lift"
+            className="btn btn-primary btn-xl"
             onClick={() => router.push('/login')}
-            style={{ width: '100%', borderRadius: 'var(--radius-md)' }}
+            style={{ width: '100%' }}
           >
-            Enter Portal
+            Get Started
           </button>
           <button
-            className="btn btn-lg btn-secondary hover-lift"
+            className="btn btn-xl"
             onClick={() => router.push('/login')}
-            style={{ width: '100%', borderRadius: 'var(--radius-md)', background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}
+            style={{
+              width: '100%',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: '#F5F5F7',
+              border: '1px solid rgba(255, 255, 255, 0.10)',
+              backdropFilter: 'blur(12px)',
+            }}
           >
-            Create Account
+            Sign In
           </button>
         </div>
 
         {/* Feature Blocks */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--space-4)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 'var(--space-6)', color: 'var(--text-secondary)', fontSize: '11px' }}>
-          <div>
-            <div style={{ fontSize: 24, marginBottom: '4px' }}>🛡️</div>
-            <strong style={{ color: 'white', display: 'block', marginBottom: '2px' }}>Verified Users</strong>
-            <span>Trusted profiles</span>
-          </div>
-          <div>
-            <div style={{ fontSize: 24, marginBottom: '4px' }}>🌎</div>
-            <strong style={{ color: 'white', display: 'block', marginBottom: '2px' }}>Live Connections</strong>
-            <span>Real-time matching</span>
-          </div>
-          <div>
-            <div style={{ fontSize: 24, marginBottom: '4px' }}>🤖</div>
-            <strong style={{ color: 'white', display: 'block', marginBottom: '2px' }}>Custom AI</strong>
-            <span>Voice calling</span>
-          </div>
+        <div style={{
+          display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--space-4)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+          paddingTop: 'var(--space-6)',
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(12px)',
+          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.35s',
+        }}>
+          {[
+            { icon: '🛡️', title: 'Verified', desc: 'Trusted profiles' },
+            { icon: '⚡', title: 'Live Match', desc: 'Real-time' },
+            { icon: '✨', title: 'AI Friends', desc: 'Custom companions' },
+          ].map((f, i) => (
+            <div key={i} style={{ textAlign: 'center' }}>
+              <div style={{
+                width: 44, height: 44, borderRadius: 'var(--radius-lg)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20, margin: '0 auto var(--space-2)',
+              }}>{f.icon}</div>
+              <div style={{ fontWeight: 600, fontSize: 'var(--font-size-sm)', color: '#F5F5F7', marginBottom: 2 }}>
+                {f.title}
+              </div>
+              <div style={{ fontSize: 'var(--font-size-xs)', color: '#636366' }}>
+                {f.desc}
+              </div>
+            </div>
+          ))}
         </div>
-
       </div>
-
     </div>
   );
 }
