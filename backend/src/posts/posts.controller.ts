@@ -33,10 +33,10 @@ export class PostsController {
   async getFeed(
     @CurrentUser('id') userId: string,
     @Query('type') type = 'following',
-    @Query('skip') skip = 0,
-    @Query('take') take = 20,
+    @Query('skip') skip: any = 0,
+    @Query('take') take: any = 20,
   ) {
-    return this.postsService.getFeed(userId, type, skip, take);
+    return this.postsService.getFeed(userId, type, Number(skip || 0), Number(take || 20));
   }
 
   @Get('stories')
@@ -53,13 +53,13 @@ export class PostsController {
 
   @Get('saved')
   @UseGuards(JwtAuthGuard)
-  async getSaved(@CurrentUser('id') userId: string, @Query('skip') skip = 0, @Query('take') take = 20) {
-    return this.postsService.getSavedPosts(userId, skip, take);
+  async getSaved(@CurrentUser('id') userId: string, @Query('skip') skip: any = 0, @Query('take') take: any = 20) {
+    return this.postsService.getSavedPosts(userId, Number(skip || 0), Number(take || 20));
   }
 
   @Get('user/:username')
-  async getUserPosts(@Param('username') username: string, @Query('skip') skip = 0, @Query('take') take = 20) {
-    return this.postsService.getUserPosts(username, skip, take);
+  async getUserPosts(@Param('username') username: string, @Query('skip') skip: any = 0, @Query('take') take: any = 20) {
+    return this.postsService.getUserPosts(username, Number(skip || 0), Number(take || 20));
   }
 
   @Get(':id')
