@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import api from '@/lib/api';
+import api, { API_URL } from '@/lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -225,7 +225,7 @@ export default function LoginPage() {
             </div>
 
             {/* Social Buttons */}
-            <button type="button" id="google-login-btn" style={{
+            <button type="button" id="google-login-btn" onClick={() => window.location.href = `${API_URL}/auth/google`} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)',
               width: '100%', padding: 'var(--space-3)', minHeight: 48,
               border: '1.5px solid rgba(255, 255, 255, 0.08)',
@@ -239,7 +239,7 @@ export default function LoginPage() {
               Continue with Google
             </button>
 
-            <button type="button" id="apple-login-btn" style={{
+            <button type="button" id="apple-login-btn" onClick={() => window.location.href = `${API_URL}/auth/apple`} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)',
               width: '100%', padding: 'var(--space-3)', minHeight: 48,
               border: '1.5px solid rgba(255, 255, 255, 0.08)',

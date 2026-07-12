@@ -225,6 +225,74 @@ export class AuthService {
     return { message: 'Password changed successfully' };
   }
 
+  async handleOAuthUser(provider: 'google' | 'apple', details: { id: string; email?: string; displayName?: string; username: string }) {
+    let user: any = null;
+    if (details.email) {
+      user = await this.prisma.user.findFirst({
+        where: { email: details.email, deletedAt: null },
+        include: { profile: true },
+      });
+    }
+
+    if (!user) {
+      user = await this.prisma.user.findFirst({
+        where: { username: details.username, deletedAt: null },
+        include: { profile: true },
+      });
+    }
+
+    if (!user) {
+      const passwordHash = await bcrypt.hash(Math.random().toString(36), 12);
+      user = await this.prisma.user.create({
+        data: {
+          username: details.username,
+          email: details.email,
+          passwordHash,
+          profile: {
+            create: {
+              displayName: details.displayName || details.username,
+            },
+          },
+          trustScore: {
+            create: {},
+          },
+        },
+        include: { profile: true },
+      });
+
+      const defaultSettings = [
+        { key: 'profile_visibility', value: 'everyone' },
+        { key: 'last_seen', value: 'everyone' },
+        { key: 'online_status', value: 'everyone' },
+        { key: 'phone_visibility', value: 'nobody' },
+        { key: 'email_visibility', value: 'nobody' },
+        { key: 'story_visibility', value: 'followers' },
+        { key: 'message_permissions', value: 'everyone' },
+      ];
+
+      await this.prisma.privacySetting.createMany({
+        data: defaultSettings.map((s) => ({ userId: user.id, ...s })),
+      });
+    }
+
+    const tokens = await this.generateTokens(user.id);
+    await this.createSession(user.id, tokens.accessToken, tokens.refreshToken);
+
+    await this.prisma.loginHistory.create({
+      data: {
+        userId: user.id,
+        success: true,
+        method: provider,
+      },
+    });
+
+    return {
+      user: this.sanitizeUser(user),
+      ...tokens,
+    };
+  }
+
+
   private async generateTokens(userId: string) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(

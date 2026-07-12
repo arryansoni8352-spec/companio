@@ -102,6 +102,15 @@ class ApiClient {
     return res;
   }
 
+  async mockLogin(provider: 'google' | 'apple') {
+    const res = await this.request<any>('/auth/mock-login', { method: 'POST', body: JSON.stringify({ provider }) });
+    if (res.accessToken) {
+      this.setToken(res.accessToken);
+      this.setRefreshToken(res.refreshToken);
+    }
+    return res;
+  }
+
   async logout() {
     await this.request('/auth/logout', { method: 'POST' }).catch(() => {});
     this.setToken(null);
